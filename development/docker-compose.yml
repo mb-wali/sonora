@@ -1,0 +1,134 @@
+version: '2.2'
+
+services:
+
+  # ui:
+  #   image: mbwali/sonora:latest
+  #   restart: "unless-stopped"
+  #   ports:
+  #     - "3000:3000"
+
+  mq:
+    image: rabbitmq:3.5.1-management
+    restart: "unless-stopped"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+
+  db:
+    image: mbwali/cyverse-db:latest
+    restart: "unless-stopped"
+    environment:
+      - "POSTGRES_USER=irods"
+      - "POSTGRES_PASSWORD=testpassword"
+      - "POSTGRES_DB=ICAT"
+    ports:
+      - "5432:5432"
+
+#############
+# terrain
+#############
+  api:
+    image: mbwali/terrain:latest
+    restart: "unless-stopped"
+    ports:
+      - "65002:65002"
+
+#################
+## Keycloak
+#################
+# realm: "CyVerse"
+# client_id: local-testing
+# client_secret: 10f20be1-a98a-48d1-8915-ba926207a570
+  keycloak:
+    image: mbwali/keycloak-container:latest
+    restart: "unless-stopped"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "localhost:11111/auth/realms/CyVerse"]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+    volumes:
+      - ./CyVerse-realm.json:/opt/jboss/datafiles/CyVerse-realm.json
+    ports:
+      - 11111:11111
+    environment:
+      - "KEYCLOAK_USER=admin"
+      - "KEYCLOAK_PASSWORD=admin"
+      - "PROXY_ADDRESS_FORWARDING=true"
+    command:
+      - "-b 0.0.0.0"
+      - "-Dkeycloak.import=/opt/jboss/datafiles/CyVerse-realm.json"
+      - "-Djboss.http.port=11111"
+
+
+###############################################################################################################################################
+# Unleash
+# https://github.com/Unleash/unleash
+# 
+# docs
+# https://github.com/Unleash/unleash/blob/master/websitev2/docs/contributing/developer-guide.md
+
+#
+# docker-compose
+# https://github.com/Unleash/unleash-docker/blob/master/docker-compose.yml
+
+# The first time Unleash starts it will create a default user which you can use to sign-in to your Unleash instance and add more users with:
+# username: admin
+# password: unleash4all
+
+## init on run
+# After unleash starts running on the background - it connect to the database and initializes these tables:
+#  Schema |         Name          |   Type   | Owner 
+# --------+-----------------------+----------+-------
+#  public | addons                | table    | irods
+#  public | addons_id_seq         | sequence | irods
+#  public | client_applications   | table    | irods
+#  public | client_instances      | table    | irods
+#  public | client_metrics        | table    | irods
+#  public | client_metrics_id_seq | sequence | irods
+#  public | context_fields        | table    | irods
+#  public | events                | table    | irods
+#  public | events_id_seq         | sequence | irods
+#  public | feature_tag           | table    | irods
+#  public | feature_types         | table    | irods
+#  public | features              | table    | irods
+#  public | migrations            | table    | irods
+#  public | migrations_id_seq     | sequence | irods
+#  public | projects              | table    | irods
+#  public | settings              | table    | irods
+#  public | strategies            | table    | irods
+#  public | tag_types             | table    | irods
+#  public | tags                  | table    | irods
+#  public | users                 | table    | irods
+#  public | users_id_seq          | sequence | irods
+
+######################################
+  # unleash:
+  #   image: unleashorg/unleash-server # https://hub.docker.com/r/unleashorg/unleash-server/
+  #   restart: "unless-stopped"
+  #   environment:
+  #     - "DATABASE_SSL=false"
+  #     - "DATABASE_URL=postgres://irods:testpassword@db:5432/ICAT"
+  #   ports:
+  #     - "4242:4242"
+
+
+##################################################################################
+## Start development  
+# npm install
+# docker-compose -f ./development/docker-compose.yml up -d
+
+### Creating an optimized production build
+# npm run build
+
+### run production build
+# npm run start
+
+
+# npm run dev
+# visit: http://localhost:3000/
+
+
+### BUILD docker image of UI
+# docker build -t mbwali/sonora:latest .

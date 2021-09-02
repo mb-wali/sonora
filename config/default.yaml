@@ -1,5 +1,5 @@
 base_url: http://localhost:3000
-terrain_url: http://terrain
+terrain_url: http://0.0.0.0:65002
 listen_port: 3000
 legacy_de_url: https://legacy-qa.cyverse.org
 
@@ -8,10 +8,11 @@ logging:
     label: sonora server
 
 db:
-    host: localhost
+    host: 0.0.0.0 # use the container ip address
+    # host: db  # uncomment for dockerized UI
     port: 5432
-    user: null
-    password: null
+    user: de
+    password: testpassword
     database: de
 
 sessions:
@@ -21,10 +22,10 @@ sessions:
     poll_interval_ms: 5000
 
 keycloak:
-    server_url: "https://kc.cyverse.org/auth"
+    server_url: "http://0.0.0.0:11111/auth"
     realm: "CyVerse"
-    client_id: null
-    client_secret: null
+    client_id: local-testing
+    client_secret: 10f20be1-a98a-48d1-8915-ba926207a570
 
 intercom:
     app_id: appId
@@ -70,6 +71,11 @@ vice:
     analysisContainerName: analysis
     deploymentTimeoutMs: 180000
 
+amqp:
+    amqp_uri: amqp://localhost:15672
+    # amqp_uri: amqp://mq:15672 # uncomment for dockerized UI
+    exchange_name: amqp
+
 services:
     ontology_lookup_service:
         base: https://www.ebi.ac.uk/ols/api/select
@@ -83,8 +89,8 @@ grouper:
     admin: de_grouper
 
 unleash:
-    api_url: http://unleash:4242/api
-    client_secret: null
+    api_url: http://0.0.0.0:4242/api
+    client_secret: dsdsd4545
     maintenance_flag: DE-Maintenance
 
 metadata:
