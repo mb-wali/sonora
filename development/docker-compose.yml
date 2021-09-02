@@ -1,0 +1,474 @@
+version: '2.2'
+
+services:
+
+#############
+# Sonora UI
+# irods is configured
+#############
+  # ui:
+  #   image: mbwali/sonora:latest
+  #   restart: "unless-stopped"
+  #   ports:
+  #     - "3000:3000"
+
+#############
+# RabbitMQ
+#############
+  mq:
+    image: rabbitmq:3.5.1-management
+    restart: "unless-stopped"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+
+#############
+# job-status-listener
+# Listens over HTTP for job status updates, then publishes them to AMQP.
+# https://github.com/mb-wali/job-status-listener/tree/dev
+#############
+  job-status-listener:
+    image: mbwali/job-status-listener:latest
+    restart: "unless-stopped"
+    ports:
+      - "60020:60020"
+    depends_on:
+      mq:
+        condition: service_started
+
+#############
+# postgresql
+#############
+# docker network create --subnet=172.20.0.0/24 mynetwork
+# docker run --net mynetwork -it -p 5432:5432 mbwali/cyverse-db:latest
+# docker network prune
+  db:
+    image: mbwali/cyverse-db-seeds-grouper:latest # with additional grouper seeds
+    # image: mbwali/cyverse-db-seeds:latest  # db with required pre databases
+    # image: mbwali/cyverse-db:latest        # clean databases without seeds 
+    restart: "unless-stopped"
+    environment:
+      - "POSTGRES_USER=de"
+      - "POSTGRES_PASSWORD=testpassword"
+      - "POSTGRES_DB=de"
+    ports:
+      - "5432:5432"
+
+#############
+# terrain
+#############
+  # api:
+  #   image: mbwali/terrain:latest
+  #   restart: "unless-stopped"
+  #   ports:
+  #     - "65002:65002"
+
+#############
+# notification-agent
+#############
+  notification:
+    image: mbwali/notification:latest
+    restart: "always"
+    ports:
+      - "60000:60000"
+    depends_on:
+      mq:
+        condition: service_started
+      db:
+        condition: service_started
+
+#############
+# user-info
+# irods is configured
+# condor is configured
+## http://localhost:60001/bags/username/default - to get default bag for username
+## DONE building and running
+## ERROR: cannot find the default bag for user
+#############
+  user-info:
+    image: mbwali/user-info:latest
+    restart: "always"
+    ports:
+      - "60001:60001"
+    depends_on:
+      mq:
+        condition: service_started
+      db:
+        condition: service_started
+
+#############
+# permissions
+# ERROR: grouper database tables are missing
+#############
+  permissions:
+    image: mbwali/permissions:latest
+    restart: "always"
+    ports:
+      - "60005:60005"
+    depends_on:
+      db:
+        condition: service_started
+
+#############
+# dashboard-aggregator
+# app-exposer depends on this
+#############
+  dashboard-aggregator:
+    image: mbwali/dashboard-aggregator:latest
+    restart: "always"
+    ports:
+      - "3001:3001"
+    depends_on:
+      permissions:
+        condition: service_started
+      db:
+        condition: service_started
+
+#############
+# metadata
+#############
+  metadata:
+    image: mbwali/metadata:latest
+    restart: "always"
+    ports:
+      - "60007:60007"
+    depends_on:
+      mq:
+        condition: service_started
+      db:
+        condition: service_started
+
+#############
+# data-info
+# irods is configured
+# ICAT is configured
+# connection to the irods database is required
+# ERROR: exception in thread "main" clojure.lang.ExceptionInfo: throw+: {:error_code "ERR_CONFIG_INVALID"} {:error_code "ERR_CONFIG_INVALID"}
+#############
+  data-info:
+    image: mbwali/data-info:latest
+    restart: "always"
+    ports:
+      - "60002:60002"
+    depends_on:
+      mq:
+        condition: service_started
+      db:
+        condition: service_started
+
+#############
+# analyses
+# Provides a HTTP API for interacting with analyses in the Discovery Environment.
+# https://github.com/mb-wali/analyses
+#############
+  analyses:
+    image: mbwali/analyses:latest
+    restart: "always"
+    ports:
+      - "60008:60008"
+    depends_on:
+      data-info:
+        condition: service_started
+      apps:
+        condition: service_started
+      db:
+        condition: service_started
+
+#############
+# apps
+# http://localhost:65007/docs - documentation of all available endpoints.
+#############
+  apps:
+    image: mbwali/apps:latest
+    restart: "always"
+    ports:
+      - "31323:31323"
+    depends_on:
+      mq:
+        condition: service_started
+      db:
+        condition: service_started
+      data-info:
+        condition: service_started
+      iplant-groups:
+        condition: service_started
+      notification:
+        condition: service_started
+
+#############
+# requests
+#############
+  requests:
+    image: mbwali/requests:latest
+    restart: "always"
+    ports:
+      - "8081:8081"
+    depends_on:
+      db:
+        condition: service_started
+
+#############
+# iplant-groups
+# docs: http://localhost:60006/docs
+# requires: Grouper API
+## http://internet2.github.io/grouper/
+## https://github.com/Internet2/grouper
+## https://hub.docker.com/r/unicon/grouper-api/
+## https://spaces.at.internet2.edu/display/Grouper/Grouper+Web+Services
+## https://www.youtube.com/watch?v=umHE8N3mMfs
+############# https://github.com/Unicon/grouper-dockerized
+### https://spaces.at.internet2.edu/display/Grouper/Grouper+container+documentation+for+v2.5
+#############
+  iplant-groups:
+    image: mbwali/iplant-groups:latest
+    restart: "always"
+    ports:
+      - "60006:60006"
+    depends_on:
+      mq:
+        condition: service_started
+
+#############
+# async-tasks
+# https://github.com/mb-wali/async-tasks
+#############
+  async-tasks:
+    image: mbwali/async-tasks:latest
+    restart: "always"
+    ports:
+      - "60004:60004"
+    depends_on:
+      db:
+        condition: service_started
+
+#############
+# search
+# https://github.com/mb-wali/search
+#############
+  search:
+    image: mbwali/search:latest
+    restart: "always"
+    ports:
+      - "60011:60011"
+    depends_on:
+      es:
+        condition: service_healthy
+
+#############
+# saved-searches
+# https://github.com/mb-wali/saved-searches
+# irods is configured
+# condor is configured
+#############
+  saved-searches:
+    image: mbwali/saved-searches:latest
+    restart: "always"
+    ports:
+      - "60012:60012"
+    depends_on:
+      db:
+        condition: service_started
+      mq:
+        condition: service_started
+      apps:
+        condition: service_started
+
+#############
+# user-preferences
+# https://github.com/mb-wali/user-preferences
+# irods is configured
+# condor is configured
+#############
+  user-preferences:
+    image: mbwali/user-preferences:latest
+    restart: "always"
+    ports:
+      - "60013:60013"
+    depends_on:
+      db:
+        condition: service_started
+      mq:
+        condition: service_started
+      apps:
+        condition: service_started
+
+
+#############
+# user-sessions
+# https://github.com/mb-wali/user-sessions
+# irods is configured
+# condor is configured
+#############
+  user-sessions:
+    image: mbwali/user-sessions:latest
+    restart: "always"
+    ports:
+      - "60014:60014"
+    depends_on:
+      db:
+        condition: service_started
+      mq:
+        condition: service_started
+      apps:
+        condition: service_started
+
+#################
+## Keycloak
+#################
+# realm: "CyVerse"
+# client_id: local-testing
+# client_secret: 5cf50425-f969-485e-a0c2-e36ec45c0601
+  keycloak:
+    image: mbwali/keycloak-container:latest
+    restart: "unless-stopped"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "localhost:11111/auth/realms/CyVerse"]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+    volumes:
+      - ./CyVerse-realm.json:/opt/jboss/datafiles/CyVerse-realm.json
+    ports:
+      - 11111:11111
+    environment:
+      - "KEYCLOAK_USER=admin"
+      - "KEYCLOAK_PASSWORD=admin"
+      - "PROXY_ADDRESS_FORWARDING=true"
+    command:
+      - "-b 0.0.0.0"
+      - "-Dkeycloak.import=/opt/jboss/datafiles/CyVerse-realm.json"
+      - "-Djboss.http.port=11111"
+
+#################
+## Elastic Search
+# username: elastic
+# password: elastic
+#################
+  es:
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2
+    restart: "unless-stopped"
+    environment:
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - discovery.type=single-node
+      - ELASTIC_USERNAME=elastic
+      - ELASTIC_PASSWORD=elastic
+    healthcheck:
+      test: ["CMD", "curl", "-f", "localhost:9200/_cluster/health?wait_for_status=yellow"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+
+#################
+## CAS
+#################
+# building image: https://gitlab.tugraz.at/cyverse-austria/cas-overlay/-/tree/docs
+# properties: https://apereo.github.io/cas/6.1.x/configuration/Configuration-Properties.html
+# tug properties: https://gitlab.tugraz.at/cyverse-austria/k8s-cas/-/blob/master/resources/configs/tugraz/cas.properties
+# ERROR: ERROR Unable to locate appender "casConsole" for logger config "root"
+### LDAP needs to configured
+### CACHE is configured
+  cas:
+    image: mbwali/cas:latest
+    restart: "unless-stopped"
+    ports:
+      - "8443:8443" # cas
+      # - "8080:8080" # tomcat
+    depends_on:
+      cache:
+        condition: service_started
+
+# #################
+# ## Redis
+# #################
+# # CAS service depends on it
+# # TUG redis configs: https://gitlab.tugraz.at/cyverse-austria/k8s-cas/-/blob/master/resources/configs/tugraz/redis.conf
+  cache:
+    image: redis
+    restart: "unless-stopped"
+    read_only: true
+    # command: redis-server --requirepass TheSe$$ionSt0re
+    ports:
+      - "6379:6379"
+    # environment:
+    #   - "REDIS_PASSWORD=TheSe$$ionSt0re" # defined in cas configs
+
+
+###############################################################################################################################################
+# Unleash
+# https://github.com/Unleash/unleash
+#
+# docs
+# https://github.com/Unleash/unleash/blob/master/websitev2/docs/contributing/developer-guide.md
+
+#
+# docker-compose
+# https://github.com/Unleash/unleash-docker/blob/master/docker-compose.yml
+
+# The first time Unleash starts it will create a default user which you can use to sign-in to your Unleash instance and add more users with:
+# username: admin
+# password: unleash4all
+
+## init on run
+# After unleash starts running on the background - it connect to the database and initializes these tables:
+#  Schema |         Name          |   Type   | Owner
+# --------+-----------------------+----------+-------
+#  public | addons                | table    | irods
+#  public | addons_id_seq         | sequence | irods
+#  public | client_applications   | table    | irods
+#  public | client_instances      | table    | irods
+#  public | client_metrics        | table    | irods
+#  public | client_metrics_id_seq | sequence | irods
+#  public | context_fields        | table    | irods
+#  public | events                | table    | irods
+#  public | events_id_seq         | sequence | irods
+#  public | feature_tag           | table    | irods
+#  public | feature_types         | table    | irods
+#  public | features              | table    | irods
+#  public | migrations            | table    | irods
+#  public | migrations_id_seq     | sequence | irods
+#  public | projects              | table    | irods
+#  public | settings              | table    | irods
+#  public | strategies            | table    | irods
+#  public | tag_types             | table    | irods
+#  public | tags                  | table    | irods
+#  public | users                 | table    | irods
+#  public | users_id_seq          | sequence | irods
+
+######################################
+  # unleash:
+  #   image: unleashorg/unleash-server # https://hub.docker.com/r/unleashorg/unleash-server/
+  #   restart: "unless-stopped"
+  #   environment:
+  #     - "DATABASE_SSL=false"
+  #     - "DATABASE_URL=postgres://irods:testpassword@db:5432/ICAT"
+  #   ports:
+  #     - "4242:4242"
+
+
+##################################################################################
+## Start development
+# npm install
+# docker-compose -f ./development/docker-compose.yml up -d
+
+### Creating an optimized production build
+# npm run build
+
+### run production build
+# npm run start
+
+
+# npm run dev
+# visit: http://localhost:3000/
+
+
+### BUILD docker image of UI
+# docker build -t mbwali/sonora:latest .
