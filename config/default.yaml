@@ -8,7 +8,9 @@ logging:
     label: sonora server
 
 db:
-    host: 0.0.0.0 # use the container ip address
+    # use 0.0.0.0 if docker-compose is exposing ports
+    # use the container ip address if the port is not exposed via docker-compose 
+    host: 172.20.0.6
     # host: db  # uncomment for dockerized UI
     port: 5432
     user: de

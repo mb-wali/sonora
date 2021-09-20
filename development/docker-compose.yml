@@ -1,5 +1,12 @@
 version: '2.2'
 
+# defined docker network for operating systems
+networks:
+  mynetwork:
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
 services:
 
   # ui:
@@ -22,8 +29,11 @@ services:
       - "POSTGRES_USER=irods"
       - "POSTGRES_PASSWORD=testpassword"
       - "POSTGRES_DB=ICAT"
-    ports:
-      - "5432:5432"
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.6
+    # ports:
+    #   - "5432:5432"
 
 #############
 # terrain
@@ -132,3 +142,10 @@ services:
 
 ### BUILD docker image of UI
 # docker build -t mbwali/sonora:latest .
+
+
+
+################
+# ERROR
+# info: TERRAIN undefined GET http://0.0.0.0:65002/secured/notifications/messages?sortField=timestamp&sortDir=DESC&limit=10&offset=0 {}
+################
