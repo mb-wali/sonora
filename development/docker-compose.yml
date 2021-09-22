@@ -26,9 +26,9 @@ services:
     image: mbwali/cyverse-db:latest
     restart: "unless-stopped"
     environment:
-      - "POSTGRES_USER=irods"
+      - "POSTGRES_USER=de"
       - "POSTGRES_PASSWORD=testpassword"
-      - "POSTGRES_DB=ICAT"
+      - "POSTGRES_DB=de"
     networks:
       mynetwork:
         ipv4_address: 172.20.0.6
@@ -70,6 +70,33 @@ services:
       - "-b 0.0.0.0"
       - "-Dkeycloak.import=/opt/jboss/datafiles/CyVerse-realm.json"
       - "-Djboss.http.port=11111"
+
+#################
+## CAS
+#################
+# image: https://gitlab.tugraz.at/cyverse-austria/cas-overlay/-/tree/docs
+# properties: https://apereo.github.io/cas/6.1.x/configuration/Configuration-Properties.html
+# tug properties: https://gitlab.tugraz.at/cyverse-austria/k8s-cas/-/blob/master/resources/configs/tugraz/cas.properties
+  cas:
+    image: mbwali/cas:latest
+    restart: "unless-stopped"
+    ports:
+      - "8443:8443" # cas
+      - "8080:8080" # tomcat
+
+#################
+## Redis
+#################
+# CAS service depends on it
+# TUG redis configs: https://gitlab.tugraz.at/cyverse-austria/k8s-cas/-/blob/master/resources/configs/tugraz/redis.conf
+  cache:
+    image: redis
+    restart: "unless-stopped"
+    read_only: true
+    ports:
+      - "6379:6379"
+    environment:
+      - "REDIS_PASSWORD=TheSe$$ionSt0re" # defined in cas configs
 
 
 ###############################################################################################################################################
