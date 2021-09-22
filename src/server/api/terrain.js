@@ -45,7 +45,7 @@ export const handler = ({ method, pathname, headers }) => {
             .catch(async (err) => {
                 logger.error(err);
                 const e = await err;
-
+                console.log("err response-------------------", e.response);
                 if (e.response && e.response.status === 302) {
                     //if we don't set it to 200, react-query wont get the custom response with Location
                     res.status(200);
