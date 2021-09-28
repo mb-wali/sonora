@@ -38,18 +38,18 @@ services:
 #############
 # terrain
 #############
-  api:
-    image: mbwali/terrain:latest
-    restart: "unless-stopped"
-    ports:
-      - "65002:65002"
+  # api:
+  #   image: mbwali/terrain:latest
+  #   restart: "unless-stopped"
+  #   ports:
+  #     - "65002:65002"
 
 #################
 ## Keycloak
 #################
 # realm: "CyVerse"
 # client_id: local-testing
-# client_secret: 10f20be1-a98a-48d1-8915-ba926207a570
+# client_secret: 5cf50425-f969-485e-a0c2-e36ec45c0601
   keycloak:
     image: mbwali/keycloak-container:latest
     restart: "unless-stopped"
@@ -77,26 +77,26 @@ services:
 # image: https://gitlab.tugraz.at/cyverse-austria/cas-overlay/-/tree/docs
 # properties: https://apereo.github.io/cas/6.1.x/configuration/Configuration-Properties.html
 # tug properties: https://gitlab.tugraz.at/cyverse-austria/k8s-cas/-/blob/master/resources/configs/tugraz/cas.properties
-  cas:
-    image: mbwali/cas:latest
-    restart: "unless-stopped"
-    ports:
-      - "8443:8443" # cas
-      - "8080:8080" # tomcat
+#   cas:
+#     image: mbwali/cas:latest
+#     restart: "unless-stopped"
+#     ports:
+#       - "8443:8443" # cas
+#       - "8080:8080" # tomcat
 
-#################
-## Redis
-#################
-# CAS service depends on it
-# TUG redis configs: https://gitlab.tugraz.at/cyverse-austria/k8s-cas/-/blob/master/resources/configs/tugraz/redis.conf
-  cache:
-    image: redis
-    restart: "unless-stopped"
-    read_only: true
-    ports:
-      - "6379:6379"
-    environment:
-      - "REDIS_PASSWORD=TheSe$$ionSt0re" # defined in cas configs
+# #################
+# ## Redis
+# #################
+# # CAS service depends on it
+# # TUG redis configs: https://gitlab.tugraz.at/cyverse-austria/k8s-cas/-/blob/master/resources/configs/tugraz/redis.conf
+#   cache:
+#     image: redis
+#     restart: "unless-stopped"
+#     read_only: true
+#     ports:
+#       - "6379:6379"
+#     environment:
+#       - "REDIS_PASSWORD=TheSe$$ionSt0re" # defined in cas configs
 
 
 ###############################################################################################################################################
