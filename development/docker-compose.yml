@@ -1,11 +1,11 @@
 version: '2.2'
 
 # defined docker network for operating systems
-networks:
-  mynetwork:
-    ipam:
-      config:
-        - subnet: 172.20.0.0/24
+# networks:
+#   mynetwork:
+#     ipam:
+#       config:
+#         - subnet: 172.20.0.0/24
 
 services:
 
@@ -22,6 +22,9 @@ services:
       - "15672:15672"
       - "5672:5672"
 
+# docker network create --subnet=172.20.0.0/24 mynetwork
+# docker run --net mynetwork -it -p 5432:5432 mbwali/cyverse-db:latest
+# docker network prune
   db:
     image: mbwali/cyverse-db:latest
     restart: "unless-stopped"
@@ -29,11 +32,11 @@ services:
       - "POSTGRES_USER=de"
       - "POSTGRES_PASSWORD=testpassword"
       - "POSTGRES_DB=de"
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.6
-    # ports:
-    #   - "5432:5432"
+    # networks:
+    #   mynetwork:
+    #     ipv4_address: 172.20.0.6
+    ports:
+      - "5432:5432"
 
 #############
 # terrain
@@ -43,6 +46,21 @@ services:
   #   restart: "unless-stopped"
   #   ports:
   #     - "65002:65002"
+
+#############
+# notification-agent
+# (NOTE) init db tables for notifications
+#############
+  notification:
+    image: mbwali/notification:latest
+    restart: "always"
+    ports:
+      - "60000:60000"
+    depends_on:
+      mq:
+        condition: service_started
+      db:
+        condition: service_started
 
 #################
 ## Keycloak
@@ -102,7 +120,7 @@ services:
 ###############################################################################################################################################
 # Unleash
 # https://github.com/Unleash/unleash
-# 
+#
 # docs
 # https://github.com/Unleash/unleash/blob/master/websitev2/docs/contributing/developer-guide.md
 
@@ -116,7 +134,7 @@ services:
 
 ## init on run
 # After unleash starts running on the background - it connect to the database and initializes these tables:
-#  Schema |         Name          |   Type   | Owner 
+#  Schema |         Name          |   Type   | Owner
 # --------+-----------------------+----------+-------
 #  public | addons                | table    | irods
 #  public | addons_id_seq         | sequence | irods
@@ -152,7 +170,7 @@ services:
 
 
 ##################################################################################
-## Start development  
+## Start development
 # npm install
 # docker-compose -f ./development/docker-compose.yml up -d
 
@@ -169,10 +187,3 @@ services:
 
 ### BUILD docker image of UI
 # docker build -t mbwali/sonora:latest .
-
-
-
-################
-# ERROR
-# info: TERRAIN undefined GET http://0.0.0.0:65002/secured/notifications/messages?sortField=timestamp&sortDir=DESC&limit=10&offset=0 {}
-################
