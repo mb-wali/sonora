@@ -42,15 +42,19 @@ USER postgres
 # set correct collate value
 RUN /usr/pgsql-9.6/bin/initdb --auth ident  --lc-collate C --locale en_US.UTF-8 --pgdata /var/lib/pgsql/9.6/data
 
+## Add seeds to databases
+ADD ./seeds/seeds.sql /db-dumps/
+
 # Creates user and database
 # change postgresl user password
 RUN /usr/pgsql-9.6/bin/pg_ctl -D /var/lib/pgsql/data -w start \
  && /usr/pgsql-9.6/bin/psql --command "CREATE USER de WITH SUPERUSER PASSWORD 'testpassword';" \
  && /usr/pgsql-9.6/bin/psql --command "ALTER USER postgres PASSWORD 'testpassword';" \
- && /usr/pgsql-9.6/bin/createdb -O de de \
- && /usr/pgsql-9.6/bin/createdb -O de metadata \
- && /usr/pgsql-9.6/bin/createdb -O de notifications \
- && /usr/pgsql-9.6/bin/createdb -O de permissions \
+ && /usr/pgsql-9.6/bin/psql -f ./db-dumps/seeds.sql \
+#  && /usr/pgsql-9.6/bin/createdb -O de de \
+#  && /usr/pgsql-9.6/bin/createdb -O de metadata \
+#  && /usr/pgsql-9.6/bin/createdb -O de notifications \
+#  && /usr/pgsql-9.6/bin/createdb -O de permissions \
  && /usr/pgsql-9.6/bin/pg_ctl -D /var/lib/pgsql/data -w stop
 
 ### Add VOLUMEs to allow persistence of database
@@ -90,4 +94,14 @@ CMD ["/usr/pgsql-9.6/bin/postgres", "-D", "/var/lib/pgsql/data/", "-i"]
 # java -jar facepalm-standalone.jar -h 172.20.0.6 -m init -U de -d permissions -f permissions-db.tar.gz
 #
 # testpassword
+################################
+
+################################
+## Dump all databases
+# docker exec -it 2b9bc2e60cde pg_dumpall -U de > ./dumpall.sql
+################################
+
+################################
+## Dump all databases
+# psql -f /dumpall.sql
 ################################
