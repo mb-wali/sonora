@@ -7,11 +7,11 @@ services:
 # irods is configured
 #############
 
-  # ui:
-  #   image: mbwali/sonora:latest
-  #   restart: "unless-stopped"
-  #   ports:
-  #     - "3000:3000"
+  ui:
+    image: mbwali/sonora:latest
+    restart: "unless-stopped"
+    ports:
+      - "3000:3000"
 
   mq:
     image: rabbitmq:3.5.1-management
@@ -36,11 +36,11 @@ services:
 #############
 # terrain
 #############
-  # api:
-  #   image: mbwali/terrain:latest
-  #   restart: "unless-stopped"
-  #   ports:
-  #     - "65002:65002"
+  terrain:
+    image: mbwali/terrain:latest
+    restart: "unless-stopped"
+    ports:
+      - "65002:65002"
 
 #############
 # notification-agent

@@ -1,5 +1,5 @@
-base_url: http://0.0.0.0:3000
-terrain_url: http://0.0.0.0:65002/
+base_url: http://ui:3000
+terrain_url: http://terrain:65002/
 listen_port: 3000
 legacy_de_url: https://legacy-qa.cyverse.org
 
@@ -10,7 +10,7 @@ logging:
 db:
     # use 0.0.0.0 if docker-compose is exposing ports
     # use the container ip address if the port is not exposed via docker-compose 
-    host: 0.0.0.0
+    host: db
     # host: db  # uncomment for dockerized UI
     port: 5432
     user: de
@@ -24,7 +24,7 @@ sessions:
     poll_interval_ms: 5000
 
 keycloak:
-    server_url: "http://0.0.0.0:11111/auth"
+    server_url: "http://keycloak:11111/auth"
     realm: "CyVerse"
     client_id: local-testing
     client_secret: 5cf50425-f969-485e-a0c2-e36ec45c0601
@@ -74,7 +74,7 @@ vice:
     deploymentTimeoutMs: 180000
 
 amqp:
-    amqp_uri: amqp://0.0.0.0:15672
+    amqp_uri: amqp://mq:15672
     # amqp_uri: amqp://mq:15672 # uncomment for dockerized UI
     # exchange_name: amqp
     # amqp_uri: amqp://ipc:sec@cy-db01.cyverse.tugraz.at:31333/%2fqa%2fde
