@@ -54,7 +54,7 @@ RUN /usr/pgsql-9.6/bin/pg_ctl -D /var/lib/pgsql/data -w start \
 #  && /usr/pgsql-9.6/bin/createdb -O de de \
 #  && /usr/pgsql-9.6/bin/createdb -O de metadata \
 #  && /usr/pgsql-9.6/bin/createdb -O de notifications \
-#  && /usr/pgsql-9.6/bin/createdb -O de permissions \
+ && /usr/pgsql-9.6/bin/createdb -O de grouper \
  && /usr/pgsql-9.6/bin/pg_ctl -D /var/lib/pgsql/data -w stop
 
 ### Add VOLUMEs to allow persistence of database
@@ -66,7 +66,7 @@ CMD ["/usr/pgsql-9.6/bin/postgres", "-D", "/var/lib/pgsql/data/", "-i"]
 
 #######################
 ## build
-# docker build -t mbwali/cyverse-db:latest ./postgres
+# docker build -t mbwali/cyverse-db-seeds:latest ./postgres
 #
 #######################
 
