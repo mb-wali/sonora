@@ -12,6 +12,14 @@ services:
     restart: "unless-stopped"
     ports:
       - "3000:3000"
+    depends_on:
+      db:
+        condition: service_started
+      mq:
+        condition: service_started
+      keycloak:
+        condition: service_started
+
 
   mq:
     image: rabbitmq:3.5.1-management
@@ -41,6 +49,17 @@ services:
     restart: "unless-stopped"
     ports:
       - "65002:65002"
+    depends_on:
+      db:
+        condition: service_started
+      mq:
+        condition: service_started
+      apps:
+        condition: service_started
+      notification:
+        condition: service_started
+      user-info:
+        condition: service_started
 
 #############
 # notification-agent

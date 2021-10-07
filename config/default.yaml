@@ -24,7 +24,7 @@ sessions:
     poll_interval_ms: 5000
 
 keycloak:
-    server_url: "http://keycloak:11111/auth"
+    server_url: "http://0.0.0.0:11111/auth"
     realm: "CyVerse"
     client_id: local-testing
     client_secret: 5cf50425-f969-485e-a0c2-e36ec45c0601
