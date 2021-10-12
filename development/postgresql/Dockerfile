@@ -44,7 +44,7 @@ RUN /usr/pgsql-9.6/bin/initdb --auth ident  --lc-collate C --locale en_US.UTF-8 
 
 ## Add seeds to databases
 ADD ./seeds/seeds.sql /db-dumps/
-
+ADD ./seeds/grouper.sql /db-dumps/
 # Creates user and database
 # change postgresl user password
 RUN /usr/pgsql-9.6/bin/pg_ctl -D /var/lib/pgsql/data -w start \
@@ -55,6 +55,7 @@ RUN /usr/pgsql-9.6/bin/pg_ctl -D /var/lib/pgsql/data -w start \
 #  && /usr/pgsql-9.6/bin/createdb -O de metadata \
 #  && /usr/pgsql-9.6/bin/createdb -O de notifications \
  && /usr/pgsql-9.6/bin/createdb -O de grouper \
+ && /usr/pgsql-9.6/bin/psql grouper < /db-dumps/grouper.sql \
  && /usr/pgsql-9.6/bin/pg_ctl -D /var/lib/pgsql/data -w stop
 
 ### Add VOLUMEs to allow persistence of database
