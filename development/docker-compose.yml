@@ -95,6 +95,8 @@ services:
         condition: service_started
       db:
         condition: service_started
+    volumes:
+      - ./configs/user-info/jobservices.yml:/etc/iplant/de/jobservices.yml
 
 #############
 # permissions
